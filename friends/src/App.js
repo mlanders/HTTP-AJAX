@@ -87,6 +87,23 @@ class App extends Component {
 		this.postMessage(e, this.state.friend);
 	};
 
+	handleDelete = (e, id) => {
+		e.preventDefault();
+		axios
+			.delete(`http://localhost:5000/friends/${id}`)
+			.then(response => {
+				this.update();
+				console.log(`handleDelete${response}`);
+			})
+			.catch(err =>
+				this.setState(
+					{
+						error: err,
+					},
+					console.log(err)
+				)
+			);
+	};
 	// postMessage - sends post to the friends API and runs the update function only after getting a response back
 	postMessage = (e, friend) => {
 		e.preventDefault();
@@ -131,7 +148,11 @@ class App extends Component {
 					exact
 					path="/"
 					render={props => (
-						<Friends {...props} friends={this.state.friends} />
+						<Friends
+							{...props}
+							handleDelete={this.handleDelete}
+							friends={this.state.friends}
+						/>
 					)}
 				/>
 				<Route
