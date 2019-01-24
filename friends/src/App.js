@@ -18,6 +18,8 @@ class App extends Component {
 			},
 		};
 	}
+
+	//Update -  does another get request to the friends API and clears states
 	update() {
 		axios
 			.get('http://localhost:5000/friends')
@@ -45,6 +47,7 @@ class App extends Component {
 			);
 	}
 
+	//componentDidMount -  does a get request to the friends API
 	componentDidMount() {
 		axios
 			.get('http://localhost:5000/friends')
@@ -66,6 +69,8 @@ class App extends Component {
 				)
 			);
 	}
+
+	// handleChange - updates the state with the values entered in the form
 	handleChange = e => {
 		this.setState({
 			friend: {
@@ -75,12 +80,14 @@ class App extends Component {
 		});
 	};
 
+	// handleSubmit - runs postMessage function
 	handleSubmit = e => {
 		e.preventDefault();
 
 		this.postMessage(e, this.state.friend);
 	};
 
+	// postMessage - sends post to the friends API and runs the update function only after getting a response back
 	postMessage = (e, friend) => {
 		e.preventDefault();
 		axios
