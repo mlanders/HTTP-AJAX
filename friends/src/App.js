@@ -3,14 +3,18 @@ import { Route } from 'react-router-dom';
 import axios from 'axios';
 import Friends from './components/Friends';
 import Friend from './components/Friend';
+import MultiForm from './components/Form';
+import Navigation from './components/Nav';
 import './App.css';
 
 class App extends Component {
-	constructor() {
-		super();
+	constructor(props) {
+		super(props);
 		this.state = {
 			friends: [],
 			error: [],
+			isUpdate: false,
+			isHovered: false,
 			friend: {
 				name: '',
 				age: '',
@@ -19,34 +23,17 @@ class App extends Component {
 		};
 	}
 
-	//Update -  does another get request to the friends API and clears states
-	update() {
-		axios
-			.get('http://localhost:5000/friends')
-			.then(response =>
-				this.setState(
-					{
-						friends: response.data,
-						error: '',
-						friend: {
-							name: '',
-							age: '',
-							email: '',
-						},
-					},
-					console.log(`update ${response}`)
-				)
-			)
-			.catch(err =>
-				this.setState(
-					{
-						error: err,
-					},
-					console.log(err)
-				)
-			);
-	}
-
+	reset = () => {
+		this.setState({
+			error: [],
+			isUpdate: false,
+			friend: {
+				name: '',
+				age: '',
+				email: '',
+			},
+		});
+	};
 	//componentDidMount -  does a get request to the friends API
 	componentDidMount() {
 		axios
@@ -57,7 +44,7 @@ class App extends Component {
 						friends: response.data,
 						error: '',
 					},
-					console.log(`componentDidMount${response}`)
+					console.log(`componentDidMount - ${response}`)
 				)
 			)
 			.catch(err =>
@@ -65,85 +52,145 @@ class App extends Component {
 					{
 						error: err,
 					},
-					console.log(err)
+					console.log(`componentDidMount - ${err}`)
 				)
 			);
 	}
 
 	// handleChange - updates the state with the values entered in the form
 	handleChange = e => {
-		this.setState({
-			friend: {
-				...this.state.friend,
-				[e.target.name]: e.target.value,
-			},
-		});
+		if (e.target.name === 'age') {
+			let setAge = Number(e.target.value);
+			this.setState({
+				friend: {
+					...this.state.friend,
+					age: setAge,
+				},
+			});
+		} else {
+			this.setState({
+				friend: {
+					...this.state.friend,
+					[e.target.name]: e.target.value,
+				},
+			});
+		}
 	};
 
 	// handleSubmit - runs postMessage function
 	handleSubmit = e => {
 		e.preventDefault();
-
-		this.postMessage(e, this.state.friend);
+		let friend = this.state.friend;
+		axios
+			.post(`http://localhost:5000/friends`, friend)
+			.then(response => {
+				console.log(`handleSubmit - ${response}`);
+				// this.update();
+				this.setState(
+					{
+						friends: response.data,
+						isUpdate: false,
+					},
+					this.props.history.push('/')
+				);
+			})
+			.catch(err => console.log(`handleSubmit - ${err}`));
 	};
 
+	// handleDelete - runs postMessage function
 	handleDelete = (e, id) => {
 		e.preventDefault();
 		axios
 			.delete(`http://localhost:5000/friends/${id}`)
 			.then(response => {
-				this.update();
-				console.log(`handleDelete${response}`);
+				console.log(`handleDelete - ${response}`);
+				this.setState(
+					{
+						friends: response.data,
+					},
+					this.props.history.push('/')
+				);
 			})
 			.catch(err =>
 				this.setState(
 					{
 						error: err,
 					},
-					console.log(err)
+					console.log(`handleDelete - ${err}`)
 				)
 			);
 	};
-	// postMessage - sends post to the friends API and runs the update function only after getting a response back
-	postMessage = (e, friend) => {
+
+	handleUpdate = (e, id) => {
 		e.preventDefault();
+		this.setState(
+			{
+				friend: this.state.friends.find(friend => friend.id === id),
+				isUpdate: true,
+			},
+			this.props.history.push('/form')
+		);
+	};
+	putChange = e => {
+		e.preventDefault();
+		let id = this.state.friend.id;
 		axios
-			.post(`http://localhost:5000/friends`, friend)
+			.put(`http://localhost:5000/friends/${id}`, this.state.friend)
 			.then(response => {
-				console.log(`post response ${response}`);
-				this.update();
+				console.log(`putChange - ${response}`);
+				// this.update();
+				this.setState(
+					{
+						friends: response.data,
+						error: [],
+						isUpdate: false,
+						friend: {
+							name: '',
+							age: '',
+							email: '',
+						},
+					},
+					this.props.history.push('/')
+				);
 			})
-			.catch(err => console.log(err));
+			.catch(err =>
+				this.setState(
+					{
+						error: err,
+					},
+					console.log(`putChange - ${err}`)
+				)
+			);
+	};
+
+	handleHover = () => {
+		this.setState({
+			isHovered: !this.state.isHovered,
+		});
 	};
 
 	render() {
 		return (
 			<div className="App">
-				<form onSubmit={this.handleSubmit}>
-					<input
-						type="text"
-						name="name"
-						placeholder="Name"
-						value={this.state.friend.name}
-						onChange={this.handleChange}
-					/>
-					<input
-						type="number"
-						name="age"
-						placeholder="Age"
-						value={this.state.friend.age}
-						onChange={this.handleChange}
-					/>
-					<input
-						type="email"
-						name="email"
-						placeholder="Email"
-						value={this.state.friend.email}
-						onChange={this.handleChange}
-					/>
-					<button type="submit">Submit</button>
-				</form>
+				<Navigation reset={this.reset} />
+
 				{this.state.error && <h4>{this.state.error}</h4>}
+
+				<Route
+					exact
+					path="/form"
+					render={props => (
+						<MultiForm
+							{...props}
+							handleChange={this.handleChange}
+							putChange={this.putChange}
+							handleSubmit={this.handleSubmit}
+							isUpdate={this.state.isUpdate}
+							friend={this.state.friend}
+						/>
+					)}
+				/>
+
 				<Route
 					exact
 					path="/"
@@ -151,14 +198,22 @@ class App extends Component {
 						<Friends
 							{...props}
 							handleDelete={this.handleDelete}
+							handleUpdate={this.handleUpdate}
 							friends={this.state.friends}
+							isHovered={this.state.isHovered}
+							handleHover={this.handleHover}
 						/>
 					)}
 				/>
 				<Route
-					path="/:id"
+					path="/friend/:id"
 					render={props => (
-						<Friend {...props} friends={this.state.friends} />
+						<Friend
+							{...props}
+							handleDelete={this.handleDelete}
+							handleUpdate={this.handleUpdate}
+							friends={this.state.friends}
+						/>
 					)}
 				/>
 			</div>

@@ -1,21 +1,40 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Button } from 'reactstrap';
 
 function Friend(props) {
-	let currentFriend = '';
-	currentFriend = props.friends.find(
+	console.log(props.friends);
+	let currentFriend = props.friends.find(
 		friend => friend.id.toString() === props.match.params.id
 	);
-	console.log(currentFriend);
+
+	if (!currentFriend)
+		return (
+			<div className="lost">
+				<h2>Cannot find that friend!</h2>
+			</div>
+		);
 
 	return (
 		<div className="friendWrapper">
-			<h1>{currentFriend.name}</h1>
-			<p>Age: {currentFriend.age}</p>
-			<p>Email: {currentFriend.email}</p>
-			<Link to="/">
-				<button>Home</button>
-			</Link>
+			<div className="friendInfo">
+				<h1>{currentFriend.name}</h1>
+				<p>Age: {currentFriend.age}</p>
+				<p>Email: {currentFriend.email}</p>
+			</div>
+			<div className="friendButtons">
+				<Button
+					color="primary"
+					className="friendButton"
+					onClick={e => props.handleUpdate(e, currentFriend.id)}>
+					Update
+				</Button>
+				<Button
+					color="primary"
+					className="friendButton"
+					onClick={e => props.handleDelete(e, currentFriend.id)}>
+					Delete
+				</Button>
+			</div>
 		</div>
 	);
 }
