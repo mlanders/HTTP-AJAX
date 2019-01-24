@@ -111,7 +111,7 @@ class App extends Component {
 						onChange={this.handleChange}
 					/>
 					<input
-						type="text"
+						type="email"
 						name="email"
 						placeholder="Email"
 						value={this.state.friend.email}
