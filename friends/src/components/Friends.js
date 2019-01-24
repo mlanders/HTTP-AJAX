@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 
 function Friends(props) {
 	return props.friends.map(friend => (
-		<Link to={`/${friend.id}`}>{friend.name}</Link>
+		<Link to={`/${friend.id}`} key={friend.id}>
+			{friend.name}
+		</Link>
 	));
 }
 
